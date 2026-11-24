@@ -58,6 +58,10 @@ private func parseOptions(_ args: [String]) -> Options {
             options.mono = option
         case "--no-mono":
             options.mono = .off
+        case "--pause":
+            options.pause = true
+        case "--resume":
+            options.pause = false
         case "--no-menu":
             options.showMenu = false
         case "--render":
@@ -135,6 +139,15 @@ if let path = options.renderPath {
     } catch {
         fail("\(error)")
     }
+    exit(0)
+}
+
+if let paused = options.pause {
+    DistributedNotificationCenter.default().postNotificationName(.asciiWallpaperPause,
+                                                                 object: paused ? "1" : "0",
+                                                                 userInfo: nil,
+                                                                 deliverImmediately: true)
+    usleep(150_000)
     exit(0)
 }
 

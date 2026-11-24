@@ -4,6 +4,7 @@ import CoreGraphics
 struct Options {
     var scene: SceneKind?
     var mono: Monochrome?
+    var pause: Bool?
     var fps: Double?
     var fontSize: CGFloat = 13
     var cycle: Double = 0
@@ -34,6 +35,8 @@ Options:
   --cycle <seconds>  auto-cycle scenes, 0 disables it (default: 0)
   --mono [tint]      monochrome: white (default), amber, green, ice
   --no-mono          disable monochrome
+  --pause            pause the running wallpaper
+  --resume           resume the running wallpaper
   --no-menu          hide the menu bar icon
   --quit             stop the running wallpaper
   --list             list scenes

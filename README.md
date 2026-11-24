@@ -52,6 +52,7 @@ Menu bar item:
 - "Next scene";
 - "Auto-cycle" on/off;
 - "Pause";
+- "Pause When Inactive" (stop animating while another app is frontmost);
 - "Monochrome" submenu: Off, White, Amber, Green, Ice;
 - "Frame Rate" submenu: 8, 10, 12, 15, 18, 24 fps;
 - "Quit".
@@ -98,6 +99,8 @@ $BIN --mono amber                  # monochrome amber tint
 $BIN --no-mono                     # back to full colour
 $BIN --no-menu                     # no menu bar icon
 $BIN --quit                        # stop the running instance
+$BIN --pause                       # pause the running wallpaper
+$BIN --resume                      # resume it
 $BIN --help
 ```
 
@@ -148,6 +151,8 @@ Remove the installed copy and the login item (the project folder stays):
   `--fps`). Rendering is damage-based: only tiles whose characters changed are
   repainted, and updates pause when the wallpaper is completely covered or the display
   sleeps.
+- Updates also stop while another app is frontmost (the "Pause When Inactive" menu
+  item). Click the desktop or switch to Finder to resume the animation.
 - In monochrome mode the renderer maps each colour's luminance onto a single tint
   before batching the glyphs.
 
@@ -169,6 +174,17 @@ That is well under the 83 ms frame budget at 12 fps. Rendering is damage-based a
 while the wallpaper is fully covered, so the desktop does not burn GPU behind other
 windows. If WindowServer still uses too much GPU for your taste, lower the frame rate:
 8–10 fps is enough for ambient ASCII. For smoother motion, try 18 or 24 fps.
+
+You can measure GPU utilization without Activity Monitor:
+
+```bash
+tools/gpu.sh 10
+```
+
+Run it once with the wallpaper stopped (`./stop.sh`) and once while the desktop (Finder)
+is frontmost. This reads `Device Utilization %` from the IORegistry and needs no sudo.
+If the number stays high while the wallpaper is stopped or paused, the load comes from
+another app or the compositor, not from ASCII Wallpaper.
 
 ## Troubleshooting
 

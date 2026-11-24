@@ -4,6 +4,7 @@ import QuartzCore
 extension Notification.Name {
     static let asciiWallpaperScene = Notification.Name("ru.disa.asciiwallpaper.scene")
     static let asciiWallpaperMono = Notification.Name("ru.disa.asciiwallpaper.mono")
+    static let asciiWallpaperPause = Notification.Name("ru.disa.asciiwallpaper.pause")
     static let asciiWallpaperQuit = Notification.Name("ru.disa.asciiwallpaper.quit")
 }
 
@@ -27,6 +28,7 @@ final class WallpaperController: NSObject {
 
     private var userPaused = false
     private var systemPaused = false
+    private var idlePause: Bool
     private var observers: [(center: NotificationCenter, token: NSObjectProtocol)] = []
     private var statusAccumulator: Double = 0
 
@@ -41,6 +43,7 @@ final class WallpaperController: NSObject {
         self.mono = options.mono ?? Monochrome.saved
         let savedFPS = (UserDefaults.standard.object(forKey: "fps") as? NSNumber)?.doubleValue
         self.frameRate = max(1, min(60, options.fps ?? savedFPS ?? 12))
+        self.idlePause = (UserDefaults.standard.object(forKey: "idlePause") as? Bool) ?? true
         self.autoCycle = options.cycle > 0
         self.cycleSeconds = options.cycle > 0 ? options.cycle : 75
         super.init()
@@ -101,6 +104,10 @@ final class WallpaperController: NSObject {
         var dt = now - lastTick
         lastTick = now
         guard !isPaused else { return }
+        if idlePause, let frontmost = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
+           frontmost != "com.apple.finder" {
+            return
+        }
         if dt <= 0 || dt > 0.5 {
             dt = 1.0 / max(1, frameRate)
         }
@@ -211,6 +218,11 @@ final class WallpaperController: NSObject {
         pause.state = userPaused ? .on : .off
         menu.addItem(pause)
 
+        let idle = NSMenuItem(title: "Pause When Inactive", action: #selector(toggleIdlePause), keyEquivalent: "")
+        idle.target = self
+        idle.state = idlePause ? .on : .off
+        menu.addItem(idle)
+
         menu.addItem(NSMenuItem.separator())
         let monoItem = NSMenuItem(title: "Monochrome", action: nil, keyEquivalent: "")
         let monoMenu = NSMenu()
@@ -302,6 +314,13 @@ final class WallpaperController: NSObject {
         rebuildMenu()
     }
 
+    @objc private func toggleIdlePause() {
+        idlePause.toggle()
+        UserDefaults.standard.set(idlePause, forKey: "idlePause")
+        lastTick = CACurrentMediaTime()
+        rebuildMenu()
+    }
+
     @objc private func quitAction() {
         NSApp.terminate(nil)
     }
@@ -340,6 +359,8 @@ final class WallpaperController: NSObject {
                        name: .asciiWallpaperScene, object: nil)
         dc.addObserver(self, selector: #selector(remoteMono(_:)),
                        name: .asciiWallpaperMono, object: nil)
+        dc.addObserver(self, selector: #selector(remotePause(_:)),
+                       name: .asciiWallpaperPause, object: nil)
         dc.addObserver(self, selector: #selector(remoteQuit(_:)),
                        name: .asciiWallpaperQuit, object: nil)
     }
@@ -354,6 +375,13 @@ final class WallpaperController: NSObject {
         guard let raw = note.object as? String,
               let option = Monochrome(rawValue: raw) else { return }
         applyMono(option)
+    }
+
+    @objc private func remotePause(_ note: Notification) {
+        let paused = (note.object as? String) == "1"
+        userPaused = paused
+        lastTick = CACurrentMediaTime()
+        rebuildMenu()
     }
 
     @objc private func remoteQuit(_ note: Notification) {
