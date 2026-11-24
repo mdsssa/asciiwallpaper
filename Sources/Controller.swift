@@ -43,7 +43,7 @@ final class WallpaperController: NSObject {
         self.mono = options.mono ?? Monochrome.saved
         let savedFPS = (UserDefaults.standard.object(forKey: "fps") as? NSNumber)?.doubleValue
         self.frameRate = max(1, min(60, options.fps ?? savedFPS ?? 12))
-        self.idlePause = (UserDefaults.standard.object(forKey: "idlePause") as? Bool) ?? true
+        self.idlePause = (UserDefaults.standard.object(forKey: "idlePause") as? Bool) ?? false
         self.autoCycle = options.cycle > 0
         self.cycleSeconds = options.cycle > 0 ? options.cycle : 75
         super.init()
@@ -218,7 +218,7 @@ final class WallpaperController: NSObject {
         pause.state = userPaused ? .on : .off
         menu.addItem(pause)
 
-        let idle = NSMenuItem(title: "Pause When Inactive", action: #selector(toggleIdlePause), keyEquivalent: "")
+        let idle = NSMenuItem(title: "Pause in Background", action: #selector(toggleIdlePause), keyEquivalent: "")
         idle.target = self
         idle.state = idlePause ? .on : .off
         menu.addItem(idle)

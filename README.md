@@ -52,7 +52,7 @@ Menu bar item:
 - "Next scene";
 - "Auto-cycle" on/off;
 - "Pause";
-- "Pause When Inactive" (stop animating while another app is frontmost);
+- "Pause in Background" (optional, off by default);
 - "Monochrome" submenu: Off, White, Amber, Green, Ice;
 - "Frame Rate" submenu: 8, 10, 12, 15, 18, 24 fps;
 - "Quit".
@@ -151,8 +151,9 @@ Remove the installed copy and the login item (the project folder stays):
   `--fps`). Rendering is damage-based: only tiles whose characters changed are
   repainted, and updates pause when the wallpaper is completely covered or the display
   sleeps.
-- Updates also stop while another app is frontmost (the "Pause When Inactive" menu
-  item). Click the desktop or switch to Finder to resume the animation.
+- Optionally, "Pause in Background" stops updates while another app is frontmost.
+  It is off by default, so the wallpaper keeps animating behind your windows; enable
+  it from the menu if you prefer to save power while working.
 - In monochrome mode the renderer maps each colour's luminance onto a single tint
   before batching the glyphs.
 
@@ -171,8 +172,9 @@ hypercube    0.02 ms   0.70 ms  0.72 ms
 ```
 
 That is well under the 83 ms frame budget at 12 fps. Rendering is damage-based and stops
-while the wallpaper is fully covered, so the desktop does not burn GPU behind other
-windows. If WindowServer still uses too much GPU for your taste, lower the frame rate:
+while the wallpaper is fully covered by opaque windows, so the desktop does not burn
+GPU behind full-screen apps. If WindowServer still uses too much GPU for your taste,
+lower the frame rate:
 8–10 fps is enough for ambient ASCII. For smoother motion, try 18 or 24 fps.
 
 You can measure GPU utilization without Activity Monitor:
