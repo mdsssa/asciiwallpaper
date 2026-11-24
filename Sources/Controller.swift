@@ -46,7 +46,7 @@ final class WallpaperController: NSObject {
         registerObservers()
         lastTick = CACurrentMediaTime()
         installTimer()
-        print("ASCII Wallpaper: сцена «\(sceneKind.title)», \(engines.count) экран(ов), \(Int(options.fps)) fps")
+        print("ASCII Wallpaper: scene \"\(sceneKind.title)\", \(engines.count) display(s), \(Int(options.fps)) fps")
     }
 
     func stop() {
@@ -67,7 +67,7 @@ final class WallpaperController: NSObject {
         observers.removeAll()
     }
 
-    // MARK: - Экраны
+    // MARK: - Screens
 
     private func rebuildEngines() {
         for engine in engines {
@@ -78,7 +78,7 @@ final class WallpaperController: NSObject {
         }
     }
 
-    // MARK: - Таймер
+    // MARK: - Timer
 
     private func installTimer() {
         timer?.invalidate()
@@ -118,7 +118,7 @@ final class WallpaperController: NSObject {
         }
     }
 
-    /// Диагностика: если задан ASCIIWALLPAPER_STATUS, раз в секунду пишем состояние.
+    /// Diagnostics: when ASCIIWALLPAPER_STATUS is set, write the state once per second.
     private func writeStatus() {
         guard let path = ProcessInfo.processInfo.environment["ASCIIWALLPAPER_STATUS"] else { return }
         let screens = engines.map { "\($0.canvas.cols)x\($0.canvas.rows):\($0.drawCount)" }
@@ -127,7 +127,7 @@ final class WallpaperController: NSObject {
         try? json.write(toFile: path, atomically: true, encoding: .utf8)
     }
 
-    // MARK: - Сцены
+    // MARK: - Scenes
 
     func selectScene(_ kind: SceneKind) {
         guard kind != sceneKind else { return }
@@ -149,7 +149,7 @@ final class WallpaperController: NSObject {
         selectScene(all[(index + 1) % all.count])
     }
 
-    // MARK: - Меню
+    // MARK: - Menu
 
     private func setupStatusItem() {
         guard options.showMenu else { return }
@@ -189,22 +189,22 @@ final class WallpaperController: NSObject {
         }
         menu.addItem(NSMenuItem.separator())
 
-        let next = NSMenuItem(title: "Следующая сцена", action: #selector(nextSceneAction), keyEquivalent: "n")
+        let next = NSMenuItem(title: "Next Scene", action: #selector(nextSceneAction), keyEquivalent: "n")
         next.target = self
         menu.addItem(next)
 
-        let auto = NSMenuItem(title: "Автосмена сцен", action: #selector(toggleAutoCycle), keyEquivalent: "")
+        let auto = NSMenuItem(title: "Auto-cycle", action: #selector(toggleAutoCycle), keyEquivalent: "")
         auto.target = self
         auto.state = autoCycle ? .on : .off
         menu.addItem(auto)
 
-        let pause = NSMenuItem(title: "Пауза", action: #selector(togglePause), keyEquivalent: "")
+        let pause = NSMenuItem(title: userPaused ? "Resume" : "Pause", action: #selector(togglePause), keyEquivalent: "")
         pause.target = self
         pause.state = userPaused ? .on : .off
         menu.addItem(pause)
 
         menu.addItem(NSMenuItem.separator())
-        let quit = NSMenuItem(title: "Выход", action: #selector(quitAction), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "Quit", action: #selector(quitAction), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
 
@@ -237,7 +237,7 @@ final class WallpaperController: NSObject {
         NSApp.terminate(nil)
     }
 
-    // MARK: - Уведомления
+    // MARK: - Notifications
 
     private func registerObservers() {
         let nc = NotificationCenter.default

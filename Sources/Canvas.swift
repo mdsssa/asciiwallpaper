@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-/// Цвет в sRGB, упакованный для быстрой отрисовки.
+/// sRGB colour packed for fast drawing.
 struct RGB: Equatable {
     var r: UInt8
     var g: UInt8
@@ -70,7 +70,7 @@ struct RGB: Equatable {
 let ASCII_RAMP_SOFT: [UInt16] = Array(" .:-=+*#%@".utf16)
 let ASCII_RAMP_DENSE: [UInt16] = Array(" .'`^\",:;Il!i~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$".utf16)
 
-/// Символьная сетка кадра: для каждой клетки — глиф, цвет и прозрачность.
+/// A frame's character grid: glyph, colour and alpha for every cell.
 final class Canvas {
     private(set) var cols = 0
     private(set) var rows = 0
@@ -113,7 +113,7 @@ final class Canvas {
         glyphs[index] = glyph
     }
 
-    /// Детерминированный шум 0...1 для дизеринга клетки.
+    /// Deterministic 0...1 noise used to dither a cell.
     @inline(__always)
     func ditherValue(_ index: Int, _ value: Double, _ amount: Double) -> Double {
         let h = Double((index &* 2654435761 &+ 12345) & 0xFFFF) / 65535.0
@@ -123,9 +123,9 @@ final class Canvas {
         return v
     }
 
-    /// Кладёт символ из рампы по значению 0...1.
-    /// dither добавляет детерминированный шум, чтобы плавные градиенты
-    /// не превращались в длинные горизонтальные полосы одинаковых символов.
+    /// Draws a glyph from a ramp based on a 0...1 value.
+    /// `dither` adds deterministic noise so smooth gradients do not collapse
+    /// into long horizontal runs of identical characters.
     @inline(__always)
     func put(_ index: Int, _ value: Double, _ ramp: [UInt16], _ color: RGB,
              _ alpha: Double = 1, dither: Double = 0) {

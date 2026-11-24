@@ -1,5 +1,5 @@
 #!/bin/bash
-# Устанавливает ASCII Wallpaper в ~/Applications и пытается включить автозапуск.
+# Installs ASCII Wallpaper into ~/Applications and tries to enable autostart.
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 APP="$ROOT/build/AsciiWallpaper.app"
@@ -18,7 +18,7 @@ sleep 0.3
 
 rm -rf "$DEST"
 if ! cp -R "$APP" "$DEST"; then
-    echo "Не удалось скопировать приложение в $DEST"
+    echo "Failed to copy the app to $DEST"
     exit 1
 fi
 
@@ -48,23 +48,23 @@ if launchctl bootstrap "gui/$(id -u)" "$PLIST" >/dev/null 2>&1; then
     AUTOSTART=1
 fi
 
-# Запускаем установленную копию прямо сейчас.
+# Start the installed copy right now.
 if ! pgrep -f "$DEST/Contents/MacOS/AsciiWallpaper" >/dev/null 2>&1; then
     open -g "$DEST" 2>/dev/null || nohup "$DEST/Contents/MacOS/AsciiWallpaper" >/dev/null 2>&1 &
     sleep 1
 fi
 
 if pgrep -f "AsciiWallpaper.app/Contents/MacOS/AsciiWallpaper" >/dev/null 2>&1; then
-    echo "ASCII Wallpaper установлен в $DEST и запущен."
+    echo "ASCII Wallpaper installed to $DEST and started."
 else
-    echo "Приложение установлено, но запустить его не удалось. Запустите вручную:"
+    echo "The app is installed but could not be started. Start it manually:"
     echo "  open -g \"$DEST\""
 fi
 
 if [ "$AUTOSTART" = 1 ]; then
-    echo "Автозапуск при входе включён (LaunchAgent $LABEL)."
+    echo "Autostart at login is enabled (LaunchAgent $LABEL)."
 else
-    echo "Автозапуск включить автоматически не удалось (система запретила launchctl в этой сессии)."
-    echo "Проверьте после перезахода в систему или добавьте приложение вручную:"
-    echo "  Системные настройки → Основные → Объекты входа → «+» → $DEST"
+    echo "Could not enable autostart automatically (the system blocked launchctl in this session)."
+    echo "Check again after logging back in, or add the app manually:"
+    echo "  System Settings → General → Login Items → \"+\" → $DEST"
 fi

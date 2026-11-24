@@ -1,5 +1,5 @@
 #!/bin/bash
-# Удаляет автозапуск и установленную копию приложения. Папка проекта не трогается.
+# Removes autostart and the installed copy of the app. The project folder is left untouched.
 set -euo pipefail
 DEST="$HOME/Applications/AsciiWallpaper.app"
 PLIST="$HOME/Library/LaunchAgents/ru.disa.asciiwallpaper.plist"
@@ -12,4 +12,4 @@ rm -rf "$DEST"
 
 defaults delete ru.disa.asciiwallpaper 2>/dev/null || true
 
-echo "ASCII Wallpaper удалён. Папка проекта осталась на месте."
+echo "ASCII Wallpaper removed. The project folder was left in place."

@@ -1,8 +1,8 @@
 import AppKit
 import CoreText
 
-/// Рисует Canvas в CGContext, группируя глифы по (цвет, прозрачность),
-/// чтобы на кадр уходило несколько сотен вызовов CoreText вместо десятков тысяч.
+/// Draws a Canvas into a CGContext, grouping glyphs by (colour, alpha) so a frame
+/// costs a few hundred CoreText calls instead of tens of thousands.
 final class AsciiRenderer {
     let metrics: FontMetrics
 

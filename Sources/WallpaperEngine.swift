@@ -16,8 +16,8 @@ final class WallpaperView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
-/// Одно окно-обои на один экран: живёт на уровне рабочего стола,
-/// под иконками Finder и поверх системных обоев.
+/// One wallpaper window per display: it lives at the desktop level, below Finder
+/// icons and above the system wallpaper.
 final class WallpaperEngine {
     let screen: NSScreen
     let metrics: FontMetrics

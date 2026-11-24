@@ -1,7 +1,7 @@
 import AppKit
 import CoreText
 
-/// Метрики моноширинного шрифта: размер «клетки» ASCII-сетки.
+/// Monospaced font metrics: the size of one ASCII grid cell.
 struct FontMetrics {
     let font: CTFont
     let fontName: String

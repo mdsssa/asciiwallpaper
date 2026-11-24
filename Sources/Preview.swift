@@ -13,7 +13,7 @@ enum PreviewError: Error, CustomStringConvertible {
 }
 
 enum PreviewTool {
-    /// Отрисовывает один кадр сцены в PNG (после симуляции `seconds` секунд).
+    /// Renders one scene frame to PNG after simulating `seconds` seconds.
     static func render(sceneKind: SceneKind,
                        seconds: Double,
                        cols: Int,
@@ -44,7 +44,7 @@ enum PreviewTool {
         let pixelWidth = Int((pointSize.width * scale).rounded())
         let pixelHeight = Int((pointSize.height * scale).rounded())
         guard pixelWidth > 0, pixelHeight > 0 else {
-            throw PreviewError.message("пустой размер кадра")
+            throw PreviewError.message("empty frame size")
         }
         guard let ctx = CGContext(data: nil,
                                   width: pixelWidth,
@@ -53,26 +53,26 @@ enum PreviewTool {
                                   bytesPerRow: 0,
                                   space: RGB.sRGB,
                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
-            throw PreviewError.message("не удалось создать CGContext")
+            throw PreviewError.message("failed to create CGContext")
         }
         ctx.scaleBy(x: scale, y: scale)
         renderer.draw(canvas: canvas, in: ctx, size: pointSize, background: scene.background)
 
         guard let image = ctx.makeImage() else {
-            throw PreviewError.message("не удалось получить CGImage")
+            throw PreviewError.message("failed to get CGImage")
         }
         let url = URL(fileURLWithPath: path)
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil) else {
-            throw PreviewError.message("не удалось создать PNG по пути \(path)")
+            throw PreviewError.message("failed to create PNG at \(path)")
         }
         CGImageDestinationAddImage(dest, image, nil)
         guard CGImageDestinationFinalize(dest) else {
-            throw PreviewError.message("не удалось записать PNG \(path)")
+            throw PreviewError.message("failed to write PNG \(path)")
         }
-        print("PNG: \(path) (\(pixelWidth)x\(pixelHeight), сцена «\(sceneKind.title)», t=\(String(format: "%.1f", seconds))с)")
+        print("PNG: \(path) (\(pixelWidth)x\(pixelHeight), scene \"\(sceneKind.title)\", t=\(String(format: "%.1f", seconds))s)")
     }
 
-    /// Замер скорости обновления сцены и отрисовки кадра.
+    /// Measures scene update and frame draw time.
     static func benchmark(fontSize: CGFloat, cols: Int, rows: Int, frames: Int) {
         let metrics = FontMetrics(pointSize: fontSize)
         let renderer = AsciiRenderer(metrics: metrics)
@@ -84,8 +84,8 @@ enum PreviewTool {
         let pixelWidth = Int(pointSize.width * scale)
         let pixelHeight = Int(pointSize.height * scale)
 
-        print("Сетка: \(cols)x\(rows) клеток @ \(metrics.pointSize)pt, кадр \(pixelWidth)x\(pixelHeight) px")
-        print(String(format: "%-10@ %10@ %10@ %10@", "сцена" as NSString, "update" as NSString, "draw" as NSString, "итого" as NSString))
+        print("Grid: \(cols)x\(rows) cells @ \(metrics.pointSize)pt, frame \(pixelWidth)x\(pixelHeight) px")
+        print("scene        update       draw      total")
         print(String(repeating: "-", count: 46))
 
         for kind in SceneKind.allCases {
@@ -101,7 +101,7 @@ enum PreviewTool {
                                       bytesPerRow: 0,
                                       space: RGB.sRGB,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
-                print("не удалось создать CGContext")
+                print("failed to create CGContext")
                 return
             }
             ctx.scaleBy(x: scale, y: scale)
@@ -124,7 +124,7 @@ enum PreviewTool {
             let updateMs = updateTotal / n * 1000
             let drawMs = drawTotal / n * 1000
             let totalMs = updateMs + drawMs
-            print(String(format: "%-10@ %8.2f мс %8.2f мс %8.2f мс   (худший %.2f мс)",
+            print(String(format: "%-10@ %8.2f ms %8.2f ms %8.2f ms   (worst %.2f ms)",
                          kind.rawValue as NSString, updateMs, drawMs, totalMs, worst * 1000))
         }
     }

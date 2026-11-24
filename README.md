@@ -173,5 +173,5 @@ scripts and previews.
 
 ## Notes
 
-The menu bar and CLI messages are currently in Russian. Previews are offscreen renders
-from the same engine; capturing the live desktop requires Screen Recording permission.
+Previews are offscreen renders from the same engine; capturing the live desktop requires
+Screen Recording permission.

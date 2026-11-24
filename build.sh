@@ -1,5 +1,5 @@
 #!/bin/bash
-# Сборка ASCII Wallpaper в самодостаточный .app-бандл.
+# Build ASCII Wallpaper into a self-contained .app bundle.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
@@ -20,4 +20,4 @@ swiftc -O -swift-version 5 \
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
 codesign --force --sign - "$APP" >/dev/null 2>&1 || true
 
-echo "Собрано: $APP"
+echo "Built: $APP"

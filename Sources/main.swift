@@ -26,7 +26,7 @@ private func parseOptions(_ args: [String]) -> Options {
     while i < args.count {
         let arg = args[i]
         func value() -> String {
-            guard i + 1 < args.count else { fail("для \(arg) нужно значение") }
+            guard i + 1 < args.count else { fail("missing value for \(arg)") }
             i += 1
             return args[i]
         }
@@ -34,20 +34,20 @@ private func parseOptions(_ args: [String]) -> Options {
         case "--scene":
             let name = value()
             guard let kind = SceneKind(rawValue: name) else {
-                fail("неизвестная сцена «\(name)». Доступно: \(SceneKind.allCases.map { $0.rawValue }.joined(separator: ", "))")
+                fail("unknown scene \"\(name)\". Available: \(SceneKind.allCases.map { $0.rawValue }.joined(separator: ", "))")
             }
             options.scene = kind
         case "--fps":
             let raw = value()
-            guard let fps = Double(raw), fps >= 1, fps <= 120 else { fail("--fps должен быть числом 1...120") }
+            guard let fps = Double(raw), fps >= 1, fps <= 120 else { fail("--fps must be a number between 1 and 120") }
             options.fps = fps
         case "--font-size":
             let raw = value()
-            guard let size = Double(raw), size >= 6, size <= 120 else { fail("--font-size должен быть числом 6...120") }
+            guard let size = Double(raw), size >= 6, size <= 120 else { fail("--font-size must be a number between 6 and 120") }
             options.fontSize = CGFloat(size)
         case "--cycle":
             let raw = value()
-            guard let cycle = Double(raw), cycle >= 0 else { fail("--cycle должен быть >= 0") }
+            guard let cycle = Double(raw), cycle >= 0 else { fail("--cycle must be >= 0") }
             options.cycle = cycle
         case "--no-menu":
             options.showMenu = false
@@ -55,19 +55,19 @@ private func parseOptions(_ args: [String]) -> Options {
             options.renderPath = value()
         case "--time":
             let raw = value()
-            guard let time = Double(raw), time >= 0, time <= 600 else { fail("--time должен быть числом 0...600") }
+            guard let time = Double(raw), time >= 0, time <= 600 else { fail("--time must be a number between 0 and 600") }
             options.renderTime = time
         case "--cols":
             let raw = value()
-            guard let cols = Int(raw), cols >= 20, cols <= 600 else { fail("--cols должен быть числом 20...600") }
+            guard let cols = Int(raw), cols >= 20, cols <= 600 else { fail("--cols must be a number between 20 and 600") }
             options.cols = cols
         case "--rows":
             let raw = value()
-            guard let rows = Int(raw), rows >= 6, rows <= 400 else { fail("--rows должен быть числом 6...400") }
+            guard let rows = Int(raw), rows >= 6, rows <= 400 else { fail("--rows must be a number between 6 and 400") }
             options.rows = rows
         case "--scale":
             let raw = value()
-            guard let scale = Double(raw), scale >= 0.5, scale <= 8 else { fail("--scale должен быть числом 0.5...8") }
+            guard let scale = Double(raw), scale >= 0.5, scale <= 8 else { fail("--scale must be a number between 0.5 and 8") }
             options.scale = CGFloat(scale)
         case "--benchmark":
             options.benchmark = true
@@ -81,7 +81,7 @@ private func parseOptions(_ args: [String]) -> Options {
         case "--help", "-h":
             options.help = true
         default:
-            fail("неизвестная опция «\(arg)». Смотри --help")
+            fail("unknown option \"\(arg)\". See --help")
         }
         i += 1
     }
@@ -144,7 +144,7 @@ if !acquireSingleInstanceLock() {
                                                                      userInfo: nil,
                                                                      deliverImmediately: true)
     }
-    print("ASCII Wallpaper уже запущен — команда отправлена работающему экземпляру")
+    print("ASCII Wallpaper is already running — command sent to the active instance")
     exit(0)
 }
 

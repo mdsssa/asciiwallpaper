@@ -18,12 +18,12 @@ enum SceneKind: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .matrix: return "Матрица"
-        case .donut: return "Пончик"
-        case .plasma: return "Плазма"
-        case .fire: return "Огонь"
-        case .stars: return "Звёзды"
-        case .hypercube: return "Гиперкуб"
+        case .matrix: return "Matrix"
+        case .donut: return "Donut"
+        case .plasma: return "Plasma"
+        case .fire: return "Fire"
+        case .stars: return "Stars"
+        case .hypercube: return "Hypercube"
         }
     }
 
@@ -44,10 +44,10 @@ enum SceneKind: String, CaseIterable {
     }
 }
 
-// MARK: - Матрица
+// MARK: - Matrix
 
 final class MatrixScene: Scene {
-    let title = "Матрица"
+    let title = "Matrix"
     let background = RGB(hex: 0x030806)
 
     private var cols = 0
@@ -124,10 +124,10 @@ final class MatrixScene: Scene {
     }
 }
 
-// MARK: - Пончик
+// MARK: - Donut
 
 final class DonutScene: Scene {
-    let title = "Пончик"
+    let title = "Donut"
     let background = RGB(hex: 0x04060d)
 
     private var cols = 0
@@ -193,19 +193,19 @@ final class DonutScene: Scene {
                 let ny = ct * sp
                 let nz = st
 
-                // поворот в плоскости экрана
+                // rotate within the screen plane
                 let rx = px * cosC - py * sinC
                 let ry = px * sinC + py * cosC
                 let rnx = nx * cosC - ny * sinC
                 let rny = nx * sinC + ny * cosC
 
-                // наклон вокруг X
+                // tilt around X
                 let ty = ry * cosA - pz * sinA
                 let tz = ry * sinA + pz * cosA
                 let tny = rny * cosA - nz * sinA
                 let tnz = rny * sinA + nz * cosA
 
-                // лёгкое покачивание вокруг Y
+                // gentle wobble around Y
                 let ux = rx * cosB + tz * sinB
                 let uz = -rx * sinB + tz * cosB
                 let unx = rnx * cosB + tnz * sinB
@@ -242,10 +242,10 @@ final class DonutScene: Scene {
     }
 }
 
-// MARK: - Плазма
+// MARK: - Plasma
 
 final class PlasmaScene: Scene {
-    let title = "Плазма"
+    let title = "Plasma"
     let background = RGB(hex: 0x060312)
 
     private var cols = 0
@@ -285,10 +285,10 @@ final class PlasmaScene: Scene {
     }
 }
 
-// MARK: - Огонь
+// MARK: - Fire
 
 final class FireScene: Scene {
-    let title = "Огонь"
+    let title = "Fire"
     let background = RGB(hex: 0x050201)
 
     private var cols = 0
@@ -330,7 +330,7 @@ final class FireScene: Scene {
         guard cols > 1, rows > 2 else { return }
         let step = min(dt, 0.1)
 
-        // тлеющие угли у нижней кромки
+        // glowing embers along the bottom edge
         let glowRows = min(5, rows)
         for k in 0..<glowRows {
             let r = rows - 1 - k
@@ -374,7 +374,7 @@ final class FireScene: Scene {
             let i = r * cols + c
             canvas.put(i, glyph, palette[idx], min(1, 0.4 + 0.7 * bright))
 
-            // короткий след вниз
+            // short trail below
             if r + 1 < rows {
                 canvas.put(i + cols, 46, palette[idx], min(1, 0.12 + 0.35 * bright))
             }
@@ -394,10 +394,10 @@ final class FireScene: Scene {
     }
 }
 
-// MARK: - Звёзды
+// MARK: - Stars
 
 final class StarsScene: Scene {
-    let title = "Звёзды"
+    let title = "Stars"
     let background = RGB(hex: 0x01030a)
 
     private var cols = 0
@@ -469,10 +469,10 @@ final class StarsScene: Scene {
     }
 }
 
-// MARK: - Гиперкуб
+// MARK: - Hypercube
 
 final class HypercubeScene: Scene {
-    let title = "Гиперкуб"
+    let title = "Hypercube"
     let background = RGB(hex: 0x03040a)
 
     private var cols = 0
