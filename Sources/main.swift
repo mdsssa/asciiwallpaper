@@ -49,6 +49,15 @@ private func parseOptions(_ args: [String]) -> Options {
             let raw = value()
             guard let cycle = Double(raw), cycle >= 0 else { fail("--cycle must be >= 0") }
             options.cycle = cycle
+        case "--mono":
+            var option = Monochrome.white
+            if i + 1 < args.count, let next = Monochrome(rawValue: args[i + 1]) {
+                option = next
+                i += 1
+            }
+            options.mono = option
+        case "--no-mono":
+            options.mono = .off
         case "--no-menu":
             options.showMenu = false
         case "--render":
@@ -121,6 +130,7 @@ if let path = options.renderPath {
                                rows: rows,
                                fontSize: options.fontSize,
                                scale: options.scale,
+                               mono: options.mono ?? .off,
                                path: path)
     } catch {
         fail("\(error)")
@@ -141,6 +151,12 @@ if !acquireSingleInstanceLock() {
     if let kind = options.scene {
         DistributedNotificationCenter.default().postNotificationName(.asciiWallpaperScene,
                                                                      object: kind.rawValue,
+                                                                     userInfo: nil,
+                                                                     deliverImmediately: true)
+    }
+    if let mono = options.mono {
+        DistributedNotificationCenter.default().postNotificationName(.asciiWallpaperMono,
+                                                                     object: mono.rawValue,
                                                                      userInfo: nil,
                                                                      deliverImmediately: true)
     }

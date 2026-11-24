@@ -5,6 +5,12 @@ import CoreText
 /// costs a few hundred CoreText calls instead of tens of thousands.
 final class AsciiRenderer {
     let metrics: FontMetrics
+    var mono: Monochrome = .off {
+        didSet {
+            if mono != oldValue { monoCache.removeAll(keepingCapacity: true) }
+        }
+    }
+    private var monoCache: [UInt32: UInt32] = [:]
 
     private var glyphCache = [CGGlyph](repeating: 0, count: 65536)
     private var glyphCached = [Bool](repeating: false, count: 65536)
@@ -37,6 +43,14 @@ final class AsciiRenderer {
         return glyphCache[index]
     }
 
+    private func displayColor(_ packed: UInt32) -> UInt32 {
+        if mono == .off { return packed }
+        if let cached = monoCache[packed] { return cached }
+        let out = mono.apply(to: RGB(hex: packed)).packed
+        monoCache[packed] = out
+        return out
+    }
+
     private func resetRuns() {
         for i in 0..<runGlyphs.count {
             runGlyphs[i].removeAll(keepingCapacity: true)
@@ -51,7 +65,7 @@ final class AsciiRenderer {
         let ga = max(0, min(1, globalAlpha))
 
         ctx.saveGState()
-        ctx.setFillColor(background.cgColor)
+        ctx.setFillColor(mono.apply(to: background).cgColor)
         ctx.fill(CGRect(origin: .zero, size: size))
         ctx.setShouldAntialias(true)
         ctx.setAllowsFontSubpixelQuantization(false)
@@ -83,7 +97,7 @@ final class AsciiRenderer {
                             if a == 0 { continue }
                             let g = glyph(for: glyphBuf[i])
                             if g == 0 { continue }
-                            let rgb = colorBuf[i]
+                            let rgb = displayColor(colorBuf[i])
                             let r5 = Int((rgb >> 19) & 0x1F)
                             let g5 = Int((rgb >> 11) & 0x1F)
                             let b5 = Int((rgb >> 3) & 0x1F)

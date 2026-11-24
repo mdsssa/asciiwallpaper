@@ -20,9 +20,11 @@ enum PreviewTool {
                        rows: Int,
                        fontSize: CGFloat,
                        scale: CGFloat,
+                       mono: Monochrome,
                        path: String) throws {
         let metrics = FontMetrics(pointSize: fontSize)
         let renderer = AsciiRenderer(metrics: metrics)
+        renderer.mono = mono
         let canvas = Canvas()
         canvas.resize(cols: cols, rows: rows)
 
@@ -69,7 +71,8 @@ enum PreviewTool {
         guard CGImageDestinationFinalize(dest) else {
             throw PreviewError.message("failed to write PNG \(path)")
         }
-        print("PNG: \(path) (\(pixelWidth)x\(pixelHeight), scene \"\(sceneKind.title)\", t=\(String(format: "%.1f", seconds))s)")
+        let monoNote = mono == .off ? "" : ", mono \(mono.rawValue)"
+        print("PNG: \(path) (\(pixelWidth)x\(pixelHeight), scene \"\(sceneKind.title)\"\(monoNote), t=\(String(format: "%.1f", seconds))s)")
     }
 
     /// Measures scene update and frame draw time.

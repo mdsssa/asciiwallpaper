@@ -3,6 +3,7 @@ import QuartzCore
 
 extension Notification.Name {
     static let asciiWallpaperScene = Notification.Name("ru.disa.asciiwallpaper.scene")
+    static let asciiWallpaperMono = Notification.Name("ru.disa.asciiwallpaper.mono")
     static let asciiWallpaperQuit = Notification.Name("ru.disa.asciiwallpaper.quit")
 }
 
@@ -18,6 +19,7 @@ final class WallpaperController: NSObject {
     private var time: Double = 0
 
     private var sceneKind: SceneKind
+    private var mono: Monochrome
     private var autoCycle: Bool
     private let cycleSeconds: Double
     private var cycleElapsed: Double = 0
@@ -35,9 +37,11 @@ final class WallpaperController: NSObject {
         self.metrics = metrics
         self.renderer = AsciiRenderer(metrics: metrics)
         self.sceneKind = options.scene ?? SceneKind.saved ?? .matrix
+        self.mono = options.mono ?? Monochrome.saved
         self.autoCycle = options.cycle > 0
         self.cycleSeconds = options.cycle > 0 ? options.cycle : 75
         super.init()
+        renderer.mono = mono
     }
 
     func start() {
@@ -46,7 +50,7 @@ final class WallpaperController: NSObject {
         registerObservers()
         lastTick = CACurrentMediaTime()
         installTimer()
-        print("ASCII Wallpaper: scene \"\(sceneKind.title)\", \(engines.count) display(s), \(Int(options.fps)) fps")
+        print("ASCII Wallpaper: scene \"\(sceneKind.title)\", \(engines.count) display(s), \(Int(options.fps)) fps, mono: \(mono.rawValue)")
     }
 
     func stop() {
@@ -123,7 +127,7 @@ final class WallpaperController: NSObject {
         guard let path = ProcessInfo.processInfo.environment["ASCIIWALLPAPER_STATUS"] else { return }
         let screens = engines.map { "\($0.canvas.cols)x\($0.canvas.rows):\($0.drawCount)" }
             .joined(separator: ",")
-        let json = "{\"time\":\(time),\"scene\":\"\(sceneKind.rawValue)\",\"paused\":\(isPaused),\"screens\":[\"\(screens)\"]}"
+        let json = "{\"time\":\(time),\"scene\":\"\(sceneKind.rawValue)\",\"mono\":\"\(mono.rawValue)\",\"paused\":\(isPaused),\"screens\":[\"\(screens)\"]}"
         try? json.write(toFile: path, atomically: true, encoding: .utf8)
     }
 
@@ -204,6 +208,21 @@ final class WallpaperController: NSObject {
         menu.addItem(pause)
 
         menu.addItem(NSMenuItem.separator())
+        let monoItem = NSMenuItem(title: "Monochrome", action: nil, keyEquivalent: "")
+        let monoMenu = NSMenu()
+        for option in Monochrome.allCases {
+            let item = NSMenuItem(title: option.title,
+                                  action: #selector(selectMonoFromMenu(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = option.rawValue
+            item.state = option == mono ? .on : .off
+            monoMenu.addItem(item)
+        }
+        monoItem.submenu = monoMenu
+        menu.addItem(monoItem)
+
+        menu.addItem(NSMenuItem.separator())
         let quit = NSMenuItem(title: "Quit", action: #selector(quitAction), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
@@ -219,6 +238,20 @@ final class WallpaperController: NSObject {
 
     @objc private func nextSceneAction() {
         advanceScene()
+    }
+
+    @objc private func selectMonoFromMenu(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let option = Monochrome(rawValue: raw) else { return }
+        applyMono(option)
+    }
+
+    private func applyMono(_ option: Monochrome) {
+        guard option != mono else { return }
+        mono = option
+        Monochrome.saved = option
+        renderer.mono = option
+        rebuildMenu()
     }
 
     @objc private func toggleAutoCycle() {
@@ -269,6 +302,8 @@ final class WallpaperController: NSObject {
         let dc = DistributedNotificationCenter.default()
         dc.addObserver(self, selector: #selector(remoteScene(_:)),
                        name: .asciiWallpaperScene, object: nil)
+        dc.addObserver(self, selector: #selector(remoteMono(_:)),
+                       name: .asciiWallpaperMono, object: nil)
         dc.addObserver(self, selector: #selector(remoteQuit(_:)),
                        name: .asciiWallpaperQuit, object: nil)
     }
@@ -277,6 +312,12 @@ final class WallpaperController: NSObject {
         guard let raw = note.object as? String,
               let kind = SceneKind(rawValue: raw) else { return }
         selectScene(kind)
+    }
+
+    @objc private func remoteMono(_ note: Notification) {
+        guard let raw = note.object as? String,
+              let option = Monochrome(rawValue: raw) else { return }
+        applyMono(option)
     }
 
     @objc private func remoteQuit(_ note: Notification) {

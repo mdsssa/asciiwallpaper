@@ -12,7 +12,8 @@ windows. Clicks pass through to the desktop.
 
 - Six procedural scenes: Matrix, Donut, Plasma, Fire, Stars, Hypercube.
 - Monospaced CoreText rendering (Menlo) with glyph batching by colour and alpha.
-- Fade transitions between scenes and automatic rotation every 75 seconds by default.
+- Fade transitions between scenes and optional auto-rotation (off by default).
+- Monochrome mode: render any scene in white, amber, green or ice.
 - Menu bar item: pick a scene, next scene, toggle auto-cycling, pause, quit.
 - Pauses when the display sleeps or the session locks; works across multiple displays.
 - Single instance: launching again with `--scene` switches the running wallpaper.
@@ -51,6 +52,7 @@ Menu bar item:
 - "Next scene";
 - "Auto-cycle" on/off;
 - "Pause";
+- "Monochrome" submenu: Off, White, Amber, Green, Ice;
 - "Quit".
 
 While the app runs it covers the system wallpaper with its own window. No desktop
@@ -72,6 +74,14 @@ wallpaper (see `--render` below).
 
 ![Donut](preview/donut.png)
 
+### Monochrome
+
+Any scene can be rendered in a single tint, for example pure black and white.
+Pick a tint in the menu bar or pass `--mono` on the command line: `white`
+(grayscale), `amber`, `green` or `ice`. The choice is remembered between launches.
+
+![Monochrome Matrix](preview/mono.png)
+
 ## Command line
 
 ```bash
@@ -81,7 +91,10 @@ $BIN --list                        # list scenes
 $BIN --scene plasma                # switch the running wallpaper (or start with it)
 $BIN --fps 15                      # fewer frames, less battery drain
 $BIN --font-size 12                # smaller grid, more characters
-$BIN --cycle 0                     # disable auto-cycling
+$BIN --cycle 60                    # auto-cycle every 60 seconds (off by default)
+$BIN --mono                        # black and white
+$BIN --mono amber                  # monochrome amber tint
+$BIN --no-mono                     # back to full colour
 $BIN --no-menu                     # no menu bar icon
 $BIN --quit                        # stop the running instance
 $BIN --help
@@ -105,7 +118,8 @@ $BIN --benchmark --cols 218 --rows 69
 
 The script copies the app to `~/Applications/AsciiWallpaper.app`, creates the
 `ru.disa.asciiwallpaper` LaunchAgent in `~/Library/LaunchAgents`, and starts it. It
-should come back automatically after the next login.
+should come back automatically after the next login. The last scene and monochrome
+tint are restored; auto-rotation stays off unless you enable it.
 
 If the system does not allow `launchctl` (managed or sandboxed sessions), the script
 still installs and starts the app and suggests adding it manually:
@@ -131,6 +145,8 @@ Remove the installed copy and the login item (the project folder stays):
   with a single `CTFontDrawGlyphs` call instead of tens of thousands of separate calls.
 - A 24 fps timer drives the animation; rendering pauses when the display sleeps or the
   session is locked.
+- In monochrome mode the renderer maps each colour's luminance onto a single tint
+  before batching the glyphs.
 
 ## Performance
 
