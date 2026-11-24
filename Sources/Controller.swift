@@ -20,6 +20,7 @@ final class WallpaperController: NSObject {
 
     private var sceneKind: SceneKind
     private var mono: Monochrome
+    private var frameRate: Double
     private var autoCycle: Bool
     private let cycleSeconds: Double
     private var cycleElapsed: Double = 0
@@ -38,6 +39,8 @@ final class WallpaperController: NSObject {
         self.renderer = AsciiRenderer(metrics: metrics)
         self.sceneKind = options.scene ?? SceneKind.saved ?? .matrix
         self.mono = options.mono ?? Monochrome.saved
+        let savedFPS = (UserDefaults.standard.object(forKey: "fps") as? NSNumber)?.doubleValue
+        self.frameRate = max(1, min(60, options.fps ?? savedFPS ?? 12))
         self.autoCycle = options.cycle > 0
         self.cycleSeconds = options.cycle > 0 ? options.cycle : 75
         super.init()
@@ -50,7 +53,7 @@ final class WallpaperController: NSObject {
         registerObservers()
         lastTick = CACurrentMediaTime()
         installTimer()
-        print("ASCII Wallpaper: scene \"\(sceneKind.title)\", \(engines.count) display(s), \(Int(options.fps)) fps, mono: \(mono.rawValue)")
+        print("ASCII Wallpaper: scene \"\(sceneKind.title)\", \(engines.count) display(s), \(Int(frameRate)) fps, mono: \(mono.rawValue)")
     }
 
     func stop() {
@@ -86,7 +89,7 @@ final class WallpaperController: NSObject {
 
     private func installTimer() {
         timer?.invalidate()
-        let interval = 1.0 / max(1, options.fps)
+        let interval = 1.0 / max(1, frameRate)
         let t = Timer(timeInterval: interval, target: self, selector: #selector(tick), userInfo: nil, repeats: true)
         t.tolerance = min(0.01, interval * 0.2)
         RunLoop.main.add(t, forMode: .common)
@@ -99,7 +102,7 @@ final class WallpaperController: NSObject {
         lastTick = now
         guard !isPaused else { return }
         if dt <= 0 || dt > 0.5 {
-            dt = 1.0 / max(1, options.fps)
+            dt = 1.0 / max(1, frameRate)
         }
         time += dt
 
@@ -125,9 +128,10 @@ final class WallpaperController: NSObject {
     /// Diagnostics: when ASCIIWALLPAPER_STATUS is set, write the state once per second.
     private func writeStatus() {
         guard let path = ProcessInfo.processInfo.environment["ASCIIWALLPAPER_STATUS"] else { return }
-        let screens = engines.map { "\($0.canvas.cols)x\($0.canvas.rows):\($0.drawCount)" }
-            .joined(separator: ",")
-        let json = "{\"time\":\(time),\"scene\":\"\(sceneKind.rawValue)\",\"mono\":\"\(mono.rawValue)\",\"paused\":\(isPaused),\"screens\":[\"\(screens)\"]}"
+        let screens = engines.map {
+            "\($0.canvas.cols)x\($0.canvas.rows):f\($0.frameCount):d\($0.drawCount):\(String(format: "%.2f", $0.lastDirtyFraction))/\(String(format: "%.2f", $0.lastDrawFraction))"
+        }.joined(separator: ",")
+        let json = "{\"time\":\(time),\"scene\":\"\(sceneKind.rawValue)\",\"mono\":\"\(mono.rawValue)\",\"fps\":\(Int(frameRate)),\"paused\":\(isPaused),\"screens\":[\"\(screens)\"]}"
         try? json.write(toFile: path, atomically: true, encoding: .utf8)
     }
 
@@ -222,6 +226,20 @@ final class WallpaperController: NSObject {
         monoItem.submenu = monoMenu
         menu.addItem(monoItem)
 
+        let fpsItem = NSMenuItem(title: "Frame Rate (\(Int(frameRate)) fps)", action: nil, keyEquivalent: "")
+        let fpsMenu = NSMenu()
+        for value in [8.0, 10.0, 12.0, 15.0, 18.0, 24.0] {
+            let item = NSMenuItem(title: "\(Int(value)) fps",
+                                  action: #selector(selectFrameRateFromMenu(_:)),
+                                  keyEquivalent: "")
+            item.target = self
+            item.representedObject = NSNumber(value: value)
+            item.state = abs(frameRate - value) < 0.01 ? .on : .off
+            fpsMenu.addItem(item)
+        }
+        fpsItem.submenu = fpsMenu
+        menu.addItem(fpsItem)
+
         menu.addItem(NSMenuItem.separator())
         let quit = NSMenuItem(title: "Quit", action: #selector(quitAction), keyEquivalent: "q")
         quit.target = self
@@ -240,6 +258,21 @@ final class WallpaperController: NSObject {
         advanceScene()
     }
 
+    @objc private func selectFrameRateFromMenu(_ sender: NSMenuItem) {
+        guard let number = sender.representedObject as? NSNumber else { return }
+        setFrameRate(number.doubleValue)
+    }
+
+    private func setFrameRate(_ value: Double) {
+        let clamped = max(1, min(60, value))
+        guard clamped != frameRate else { return }
+        frameRate = clamped
+        UserDefaults.standard.set(frameRate, forKey: "fps")
+        installTimer()
+        lastTick = CACurrentMediaTime()
+        rebuildMenu()
+    }
+
     @objc private func selectMonoFromMenu(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String,
               let option = Monochrome(rawValue: raw) else { return }
@@ -251,6 +284,9 @@ final class WallpaperController: NSObject {
         mono = option
         Monochrome.saved = option
         renderer.mono = option
+        for engine in engines {
+            engine.invalidate()
+        }
         rebuildMenu()
     }
 

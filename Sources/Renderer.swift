@@ -61,12 +61,20 @@ final class AsciiRenderer {
     }
 
     func draw(canvas: Canvas, in ctx: CGContext, size: CGSize,
-              background: RGB, globalAlpha: Double = 1) {
+              background: RGB, globalAlpha: Double = 1,
+              dirtyRect: CGRect? = nil) {
         let ga = max(0, min(1, globalAlpha))
 
+        var clipRect = CGRect(origin: .zero, size: size)
+        if let dirtyRect {
+            clipRect = dirtyRect.intersection(clipRect)
+            if clipRect.isNull || clipRect.isEmpty { return }
+        }
+
         ctx.saveGState()
+        ctx.clip(to: clipRect)
         ctx.setFillColor(mono.apply(to: background).cgColor)
-        ctx.fill(CGRect(origin: .zero, size: size))
+        ctx.fill(clipRect)
         ctx.setShouldAntialias(true)
         ctx.setAllowsFontSubpixelQuantization(false)
         ctx.textMatrix = .identity
@@ -85,13 +93,22 @@ final class AsciiRenderer {
         let baselineOffset = metrics.descent + max(0, (ch - metrics.ascent - metrics.descent) * 0.5)
         let height = size.height
 
+        let firstRow = max(0, Int(floor((height - clipRect.maxY) / ch)))
+        let lastRow = min(rows - 1, Int(ceil((height - clipRect.minY) / ch)) - 1)
+        let firstCol = max(0, Int(floor(clipRect.minX / cw)))
+        let lastCol = min(cols - 1, Int(ceil(clipRect.maxX / cw)) - 1)
+        guard firstRow <= lastRow, firstCol <= lastCol else {
+            ctx.restoreGState()
+            return
+        }
+
         canvas.alphas.withUnsafeBufferPointer { alphaBuf in
             canvas.glyphs.withUnsafeBufferPointer { glyphBuf in
                 canvas.colors.withUnsafeBufferPointer { colorBuf in
-                    for r in 0..<rows {
+                    for r in firstRow...lastRow {
                         let y = height - CGFloat(r + 1) * ch + baselineOffset
                         let rowBase = r * cols
-                        for c in 0..<cols {
+                        for c in firstCol...lastCol {
                             let i = rowBase + c
                             let a = alphaBuf[i]
                             if a == 0 { continue }

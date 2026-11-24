@@ -53,6 +53,7 @@ Menu bar item:
 - "Auto-cycle" on/off;
 - "Pause";
 - "Monochrome" submenu: Off, White, Amber, Green, Ice;
+- "Frame Rate" submenu: 8, 10, 12, 15, 18, 24 fps;
 - "Quit".
 
 While the app runs it covers the system wallpaper with its own window. No desktop
@@ -143,8 +144,10 @@ Remove the installed copy and the login item (the project folder stays):
   The scene fills a `Canvas` buffer with a glyph, colour and alpha per cell.
 - The renderer groups cells by quantised colour and alpha level and draws each group
   with a single `CTFontDrawGlyphs` call instead of tens of thousands of separate calls.
-- A 24 fps timer drives the animation; rendering pauses when the display sleeps or the
-  session is locked.
+- A 12 fps timer drives the animation by default (change it in the menu or with
+  `--fps`). Rendering is damage-based: only tiles whose characters changed are
+  repainted, and updates pause when the wallpaper is completely covered or the display
+  sleeps.
 - In monochrome mode the renderer maps each colour's luminance onto a single tint
   before batching the glyphs.
 
@@ -162,8 +165,10 @@ stars        0.04 ms   0.89 ms  0.92 ms
 hypercube    0.02 ms   0.70 ms  0.72 ms
 ```
 
-That is well under the 41 ms frame budget at 24 fps. For something quieter and
-cheaper, use `--fps 12` or `--font-size 11`.
+That is well under the 83 ms frame budget at 12 fps. Rendering is damage-based and stops
+while the wallpaper is fully covered, so the desktop does not burn GPU behind other
+windows. If WindowServer still uses too much GPU for your taste, lower the frame rate:
+8–10 fps is enough for ambient ASCII. For smoother motion, try 18 or 24 fps.
 
 ## Troubleshooting
 

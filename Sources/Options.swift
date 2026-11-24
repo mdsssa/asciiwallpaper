@@ -4,7 +4,7 @@ import CoreGraphics
 struct Options {
     var scene: SceneKind?
     var mono: Monochrome?
-    var fps: Double = 24
+    var fps: Double?
     var fontSize: CGFloat = 13
     var cycle: Double = 0
     var showMenu = true
@@ -29,7 +29,7 @@ Usage:
 
 Options:
   --scene <name>     scene: matrix | donut | plasma | fire | stars | hypercube
-  --fps <number>     frames per second (default: 24)
+  --fps <number>     frames per second (default: 12)
   --font-size <pt>   character grid font size (default: 13)
   --cycle <seconds>  auto-cycle scenes, 0 disables it (default: 0)
   --mono [tint]      monochrome: white (default), amber, green, ice
